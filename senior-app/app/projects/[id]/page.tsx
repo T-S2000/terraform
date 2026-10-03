@@ -3,6 +3,7 @@ import Link from "next/link";
 import CreateTaskForm from "@/components/CreateTaskForm";
 import TaskStatusSelect from "@/components/TaskStatusSelect";
 import DeleteTaskButton from "@/components/DeleteTaskButton";
+import TaskAssigneeSelect from "@/components/TaskAssigneeSelect";
 
 type ProjectDetailsPageProps = {
   params: Promise<{
@@ -17,15 +18,23 @@ export default async function ProjectDetailsPage({
 
   const projectId = Number(id);
 
-  const project = await prisma.project.findUnique({
-    where: {
-      id: projectId,
-    },
-    include: {
-      owner: true,
-      tasks: true,
-    },
-  });
+  const [project, users] = await Promise.all([
+    prisma.project.findUnique({
+      where: {
+        id: projectId,
+      },
+      include: {
+        owner: true,
+        tasks: true,
+      },
+    }),
+
+    prisma.user.findMany({
+      orderBy: {
+        name: "asc",
+      },
+    }),
+  ]);
 
   if (!project) {
     return (
@@ -82,6 +91,13 @@ export default async function ProjectDetailsPage({
                   projectId={project.id}
                   taskId={task.id}
                   status={task.status}
+                />
+
+                <TaskAssigneeSelect
+                  projectId={project.id}
+                  taskId={task.id}
+                  assignedToId={task.assignedToId}
+                  users={users}
                 />
 
                 <DeleteTaskButton projectId={project.id} taskId={task.id} />
