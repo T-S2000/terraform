@@ -25,7 +25,11 @@ export default async function ProjectDetailsPage({
       },
       include: {
         owner: true,
-        tasks: true,
+        tasks: {
+          include: {
+            assignedTo: true,
+          },
+        },
       },
     }),
 
@@ -86,6 +90,18 @@ export default async function ProjectDetailsPage({
             {project.tasks.map((task) => (
               <div key={task.id} className="rounded border p-3">
                 <p className="font-medium">{task.title}</p>
+
+                {task.description && (
+                  <p className="mt-1 text-sm text-gray-600">
+                    {task.description}
+                  </p>
+                )}
+
+                {task.assignedTo && (
+                  <p className="mt-1 text-sm text-gray-500">
+                    Assigned to: {task.assignedTo.name || task.assignedTo.email}
+                  </p>
+                )}
 
                 <TaskStatusSelect
                   projectId={project.id}
