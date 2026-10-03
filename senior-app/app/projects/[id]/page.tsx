@@ -4,6 +4,7 @@ import CreateTaskForm from "@/components/CreateTaskForm";
 import TaskStatusSelect from "@/components/TaskStatusSelect";
 import DeleteTaskButton from "@/components/DeleteTaskButton";
 import TaskAssigneeSelect from "@/components/TaskAssigneeSelect";
+import TaskFilter from "@/components/TaskFilter";
 
 type ProjectDetailsPageProps = {
   params: Promise<{
@@ -87,38 +88,11 @@ export default async function ProjectDetailsPage({
           <p className="mt-2 text-gray-600">No tasks yet.</p>
         ) : (
           <div className="mt-4 space-y-3">
-            {project.tasks.map((task) => (
-              <div key={task.id} className="rounded border p-3">
-                <p className="font-medium">{task.title}</p>
-
-                {task.description && (
-                  <p className="mt-1 text-sm text-gray-600">
-                    {task.description}
-                  </p>
-                )}
-
-                {task.assignedTo && (
-                  <p className="mt-1 text-sm text-gray-500">
-                    Assigned to: {task.assignedTo.name || task.assignedTo.email}
-                  </p>
-                )}
-
-                <TaskStatusSelect
-                  projectId={project.id}
-                  taskId={task.id}
-                  status={task.status}
-                />
-
-                <TaskAssigneeSelect
-                  projectId={project.id}
-                  taskId={task.id}
-                  assignedToId={task.assignedToId}
-                  users={users}
-                />
-
-                <DeleteTaskButton projectId={project.id} taskId={task.id} />
-              </div>
-            ))}
+            <TaskFilter
+              projectId={project.id}
+              tasks={project.tasks}
+              users={users}
+            />
           </div>
         )}
       </section>
