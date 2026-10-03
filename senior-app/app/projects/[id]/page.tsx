@@ -1,5 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import Link from "next/link";
+import CreateTaskForm from "@/components/CreateTaskForm";
+import TaskStatusSelect from "@/components/TaskStatusSelect";
+import DeleteTaskButton from "@/components/DeleteTaskButton";
 
 type ProjectDetailsPageProps = {
   params: Promise<{
@@ -29,10 +32,7 @@ export default async function ProjectDetailsPage({
       <main className="p-8">
         <h1 className="text-2xl font-bold">Project not found</h1>
 
-        <Link
-          href="/projects"
-          className="mt-4 inline-block underline"
-        >
+        <Link href="/projects" className="mt-4 inline-block underline">
           Back to projects
         </Link>
       </main>
@@ -45,14 +45,10 @@ export default async function ProjectDetailsPage({
         ← Back to projects
       </Link>
 
-      <h1 className="mt-6 text-3xl font-bold">
-        {project.name}
-      </h1>
+      <h1 className="mt-6 text-3xl font-bold">{project.name}</h1>
 
       {project.description && (
-        <p className="mt-2 text-gray-600">
-          {project.description}
-        </p>
+        <p className="mt-2 text-gray-600">{project.description}</p>
       )}
 
       <div className="mt-6 rounded-lg border p-4">
@@ -72,22 +68,23 @@ export default async function ProjectDetailsPage({
       <section className="mt-8">
         <h2 className="text-2xl font-semibold">Tasks</h2>
 
+        <CreateTaskForm projectId={project.id} />
+
         {project.tasks.length === 0 ? (
-          <p className="mt-2 text-gray-600">
-            No tasks yet.
-          </p>
+          <p className="mt-2 text-gray-600">No tasks yet.</p>
         ) : (
           <div className="mt-4 space-y-3">
             {project.tasks.map((task) => (
-              <div
-                key={task.id}
-                className="rounded border p-3"
-              >
+              <div key={task.id} className="rounded border p-3">
                 <p className="font-medium">{task.title}</p>
 
-                <p className="text-sm text-gray-500">
-                  Status: {task.status}
-                </p>
+                <TaskStatusSelect
+                  projectId={project.id}
+                  taskId={task.id}
+                  status={task.status}
+                />
+
+                <DeleteTaskButton projectId={project.id} taskId={task.id} />
               </div>
             ))}
           </div>
