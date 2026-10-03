@@ -2,6 +2,8 @@
 
 import { FormEvent, useEffect, useState } from "react";
 
+import Link from "next/link";
+
 type Project = {
   id: number;
   name: string;
@@ -96,10 +98,7 @@ export default function ProjectsPage() {
           />
         </div>
 
-        <button
-          type="submit"
-          className="rounded bg-black px-4 py-2 text-white"
-        >
+        <button type="submit" className="rounded bg-black px-4 py-2 text-white">
           Create Project
         </button>
       </form>
@@ -115,18 +114,16 @@ export default function ProjectsPage() {
         ) : (
           <div className="mt-4 space-y-4">
             {projects.map((project) => (
-              <div
-                key={project.id}
-                className="rounded-lg border p-4 shadow-sm"
-              >
-                <h3 className="text-xl font-semibold">
+              <div key={project.id} className="rounded-lg border p-4 shadow-sm">
+                <Link
+                  href={`/projects/${project.id}`}
+                  className="text-xl font-semibold underline"
+                >
                   {project.name}
-                </h3>
+                </Link>
 
                 {project.description && (
-                  <p className="mt-2 text-gray-600">
-                    {project.description}
-                  </p>
+                  <p className="mt-2 text-gray-600">{project.description}</p>
                 )}
 
                 <p className="mt-2 text-sm text-gray-500">
