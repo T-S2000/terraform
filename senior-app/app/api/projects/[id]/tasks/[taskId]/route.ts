@@ -1,5 +1,34 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+
+const updateTaskSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, "Task title cannot be empty")
+    .max(200, "Task title is too long")
+    .optional(),
+
+  description: z
+    .string()
+    .trim()
+    .max(1000, "Description is too long")
+    .nullable()
+    .optional(),
+
+  status: z
+    .enum(["TODO", "IN_PROGRESS", "DONE"])
+    .optional(),
+
+  assignedToId: z
+    .coerce
+    .number()
+    .int()
+    .positive()
+    .nullable()
+    .optional(),
+});
 
 type RouteParams = {
   params: Promise<{
@@ -27,7 +56,19 @@ export async function PATCH(
 
     const body = await request.json();
 
-    const { title, description, status, assignedToId } = body;
+    const result = updateTaskSchema.safeParse(body);
+
+    if (!result.success) {
+      return NextResponse.json(
+        {
+          error: "Validation failed",
+          details: result.error.issues,
+        },
+        { status: 400 }
+      );
+    }
+
+    const { title, description, status, assignedToId } = result.data;
 
     const task = await prisma.task.updateMany({
       where: {

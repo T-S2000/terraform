@@ -1,5 +1,22 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+
+const createTaskSchema = z.object({
+  title: z
+    .string()
+    .trim()
+    .min(1, "Task title is required")
+    .max(200, "Task title is too long"),
+
+  description: z
+    .string()
+    .trim()
+    .max(1000, "Description is too long")
+    .optional(),
+
+  assignedToId: z.coerce.number().int().positive().nullable().optional(),
+});
 
 type RouteParams = {
   params: Promise<{
@@ -7,10 +24,7 @@ type RouteParams = {
   }>;
 };
 
-export async function GET(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function GET(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const projectId = Number(id);
@@ -18,7 +32,7 @@ export async function GET(
     if (Number.isNaN(projectId)) {
       return NextResponse.json(
         { error: "Invalid project ID" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
@@ -37,15 +51,12 @@ export async function GET(
 
     return NextResponse.json(
       { error: "Failed to fetch tasks" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
 
-export async function POST(
-  request: NextRequest,
-  { params }: RouteParams
-) {
+export async function POST(request: NextRequest, { params }: RouteParams) {
   try {
     const { id } = await params;
     const projectId = Number(id);
@@ -53,29 +64,32 @@ export async function POST(
     if (Number.isNaN(projectId)) {
       return NextResponse.json(
         { error: "Invalid project ID" },
-        { status: 400 }
+        { status: 400 },
       );
     }
 
     const body = await request.json();
 
-    const { title, description, assignedToId } = body;
+    const result = createTaskSchema.safeParse(body);
 
-    if (!title) {
+    if (!result.success) {
       return NextResponse.json(
-        { error: "title is required" },
-        { status: 400 }
+        {
+          error: "Validation failed",
+          details: result.error.issues,
+        },
+        { status: 400 },
       );
     }
+
+    const { title, description, assignedToId } = result.data;
 
     const task = await prisma.task.create({
       data: {
         title,
         description,
         projectId,
-        assignedToId: assignedToId
-          ? Number(assignedToId)
-          : null,
+        assignedToId: assignedToId ?? null,
       },
     });
 
@@ -85,7 +99,7 @@ export async function POST(
 
     return NextResponse.json(
       { error: "Failed to create task" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }

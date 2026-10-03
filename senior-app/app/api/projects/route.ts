@@ -1,5 +1,7 @@
 import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
+import { z } from "zod";
+import { createProjectSchema } from "@/lib/validations/project";
 
 export async function GET() {
   try {
@@ -15,7 +17,7 @@ export async function GET() {
 
     return NextResponse.json(
       { error: "Failed to fetch projects" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
@@ -24,14 +26,19 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
 
-    const { name, description, ownerId } = body;
+    const result = createProjectSchema.safeParse(body);
 
-    if (!name || !ownerId) {
+    if (!result.success) {
       return NextResponse.json(
-        { error: "name and ownerId are required" },
-        { status: 400 }
+        {
+          error: "Validation failed",
+          details: result.error.issues,
+        },
+        { status: 400 },
       );
     }
+
+    const { name, description, ownerId } = result.data;
 
     const project = await prisma.project.create({
       data: {
@@ -47,7 +54,7 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json(
       { error: "Failed to create project" },
-      { status: 500 }
+      { status: 500 },
     );
   }
 }
