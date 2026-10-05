@@ -1,5 +1,7 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
+import { prisma } from "@/lib/prisma";
+import { verifyPassword } from "@/lib/auth";
 
 const handler = NextAuth({
   providers: [
@@ -22,9 +24,30 @@ const handler = NextAuth({
           return null;
         }
 
-        // Temporary authentication logic.
-        // We'll connect this to PostgreSQL + Prisma next.
-        return null;
+        const user = await prisma.user.findUnique({
+          where: {
+            email: credentials.email,
+          },
+        });
+
+        if (!user || !user.passwordHash) {
+          return null;
+        }
+
+        const isValidPassword = await verifyPassword(
+          credentials.password,
+          user.passwordHash,
+        );
+
+        if (!isValidPassword) {
+          return null;
+        }
+
+        return {
+          id: String(user.id),
+          name: user.name,
+          email: user.email,
+        };
       },
     }),
   ],
@@ -35,6 +58,23 @@ const handler = NextAuth({
 
   pages: {
     signIn: "/login",
+  },
+  callbacks: {
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
+      }
+
+      return token;
+    },
+
+    async session({ session, token }) {
+      if (session.user) {
+        session.user.id = token.id as string;
+      }
+
+      return session;
+    },
   },
 });
 
