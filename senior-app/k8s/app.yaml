@@ -1,0 +1,28 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: senior-app
+  namespace: senior-app
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: senior-app
+  template:
+    metadata:
+      labels:
+        app: senior-app
+    spec:
+      containers:
+        - name: senior-app
+          image: senior-app:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 3000
+          env:
+            - name: DATABASE_URL
+              value: postgresql://postgres:postgres@postgres:5432/project_management
+            - name: NEXTAUTH_URL
+              value: http://localhost:3000
+            - name: NEXTAUTH_SECRET
+              value: new-secret-generated-locally
