@@ -2,10 +2,21 @@ import { prisma } from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { createProjectSchema } from "@/lib/validations/project";
+import { getServerSession } from "next-auth";
+import { authOptions } from "@/lib/auth-options";
 
 export async function GET() {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const projects = await prisma.project.findMany({
+      where: {
+        ownerId: Number(session.user.id),
+      },
       orderBy: {
         createdAt: "desc",
       },
@@ -24,6 +35,12 @@ export async function GET() {
 
 export async function POST(request: NextRequest) {
   try {
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user?.id) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
     const body = await request.json();
 
     const result = createProjectSchema.safeParse(body);
@@ -38,13 +55,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { name, description, ownerId } = result.data;
+    const { name, description } = result.data;
 
     const project = await prisma.project.create({
       data: {
         name,
         description,
-        ownerId: Number(ownerId),
+        ownerId: Number(session.user.id),
       },
     });
 

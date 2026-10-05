@@ -52,7 +52,6 @@ export default function ProjectsPage() {
         body: JSON.stringify({
           name,
           description,
-          ownerId: 1,
         }),
       });
 

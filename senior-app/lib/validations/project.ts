@@ -12,9 +12,4 @@ export const createProjectSchema = z.object({
     .trim()
     .max(500, "Description is too long")
     .optional(),
-
-  ownerId: z.coerce
-    .number()
-    .int()
-    .positive("Invalid owner ID"),
 });
